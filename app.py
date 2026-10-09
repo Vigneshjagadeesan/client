@@ -5,30 +5,38 @@ from serpapi import GoogleSearch
 import streamlit as st
 import streamlit.components.v1 as components
 
-# --- 1. DISABLE RIGHT-CLICK & INSPECT ELEMENT VIA JS ---
+# --- 1. STRICT PARENT-LEVEL RIGHT-CLICK & INSPECT DISABLE ---
 disable_inspect_js = """
 <script>
-    // Disable Right-Click
-    document.addEventListener('contextmenu', event => event.preventDefault());
+    // Disable right click on main parent window
+    window.parent.document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    }, false);
 
-    // Disable Keyboard Shortcuts for Inspect Element (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U)
-    document.onkeydown = function(e) {
-        if (e.keyCode == 123) { // F12
+    // Disable keyboard shortcuts on main parent window (F12, Ctrl+Shift+I/J, Ctrl+U)
+    window.parent.document.addEventListener('keydown', function(e) {
+        if (e.keyCode == 123 || 
+            (e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74)) || 
+            (e.ctrlKey && e.keyCode == 85)) {
+            e.preventDefault();
             return false;
         }
-        if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { // Ctrl+Shift+I
-            return false;
-        }
-        if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { // Ctrl+Shift+J
-            return false;
-        }
-        if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { // Ctrl+U
-            return false;
-        }
-    }
+    }, false);
 </script>
 """
 components.html(disable_inspect_js, height=0, width=0)
+
+# Streamlit Default Menu & Footer Header-a Hide Pannura CSS
+st.markdown(
+    """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+""",
+    unsafe_allow_html=True,
+)
 
 
 # --- 2. DEEP SCAN WEBSITE FOR EMAIL ADDRESS ---
@@ -120,7 +128,7 @@ st.set_page_config(
     page_title="Ultimate Local Lead Extractor", layout="wide"
 )
 
-st.title("📍 Ultimate Business Lead Extractor Dashboard")
+st.title("📍 GMB Profile Dashboard")
 st.write(
     "Extract multi-page business listings with Email, Phone, & Copy-Paste"
     " Individual Cards!"
