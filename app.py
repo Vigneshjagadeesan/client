@@ -1,50 +1,27 @@
-import urllib.parse
-from bs4 import BeautifulSoup
+from duckduckgo_search import DDGS
 import pandas as pd
-import requests
 import streamlit as st
 
 
-def scrape_google_businesses(query):
-    # Standard User-Agent to simulate real browser request
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            " (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        )
-    }
-
-    search_url = f"https://www.google.com/search?q={urllib.parse.quote(query)}"
-    response = requests.get(search_url, headers=headers)
-
+def scrape_businesses(query):
     results = []
+    try:
+        # DDGS (DuckDuckGo Search) - Free and No IP Blocks!
+        with DDGS() as ddgs:
+            ddgs_results = list(
+                ddgs.text(query, max_results=15, region="in-en")
+            )
 
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.text, "html.parser")
-
-        # Extract business blocks from search results
-        for g in soup.find_all("div", class_="g"):
-            title_elem = g.find("h3")
-            link_elem = g.find("a")
-
-            if title_elem and link_elem:
-                name = title_elem.text
-                website = link_elem.get("href", "N/A")
-
-                # Extract snippet/address info
-                snippet_elem = g.find("div", class_="VwiC3b")
-                address_snippet = (
-                    snippet_elem.text if snippet_elem else "Details in website"
+            for item in ddgs_results:
+                results.append(
+                    {
+                        "Name": item.get("title", "N/A"),
+                        "Website": item.get("href", "N/A"),
+                        "Details / Address": item.get("body", "N/A"),
+                    }
                 )
-
-                if website.startswith("http"):
-                    results.append(
-                        {
-                            "Name": name,
-                            "Website": website,
-                            "Address / Info": address_snippet,
-                        }
-                    )
+    except Exception as e:
+        st.error(f"Search error: {e}")
 
     return results
 
@@ -55,21 +32,18 @@ st.set_page_config(
 )
 
 st.title("📍 Local Business Scraper & Dashboard")
-st.write(
-    "Extract businesses, websites, and details instantly without browser"
-    " dependency!"
-)
+st.write("Extract business details instantly using free search engine API!")
 
 col1, col2 = st.columns(2)
 with col1:
     location = st.text_input("Location / Area:", "Velachery, Chennai")
 with col2:
-    category = st.text_input("Category:", "Digital Marketing Agency")
+    category = st.text_input("Category:", "hospital")
 
 if st.button("🔍 Search & Extract Data"):
     search_query = f"{category} in {location}"
     with st.spinner(f"Extracting data for '{search_query}'..."):
-        data = scrape_google_businesses(search_query)
+        data = scrape_businesses(search_query)
 
         if data:
             df = pd.DataFrame(data)
