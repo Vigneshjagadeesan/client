@@ -120,7 +120,7 @@ st.set_page_config(
     page_title="Ultimate Local Lead Extractor", layout="wide"
 )
 
-st.title("📍 GMB Profiles")
+st.title("📍 Ultimate Business Lead Extractor Dashboard")
 st.write(
     "Extract multi-page business listings with Email, Phone, & Copy-Paste"
     " Individual Cards!"
