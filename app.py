@@ -3,9 +3,35 @@ import pandas as pd
 import requests
 from serpapi import GoogleSearch
 import streamlit as st
+import streamlit.components.v1 as components
+
+# --- 1. DISABLE RIGHT-CLICK & INSPECT ELEMENT VIA JS ---
+disable_inspect_js = """
+<script>
+    // Disable Right-Click
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // Disable Keyboard Shortcuts for Inspect Element (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U)
+    document.onkeydown = function(e) {
+        if (e.keyCode == 123) { // F12
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { // Ctrl+Shift+I
+            return false;
+        }
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { // Ctrl+Shift+J
+            return false;
+        }
+        if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { // Ctrl+U
+            return false;
+        }
+    }
+</script>
+"""
+components.html(disable_inspect_js, height=0, width=0)
 
 
-# 1. Deep scan website for Email
+# --- 2. DEEP SCAN WEBSITE FOR EMAIL ADDRESS ---
 def extract_email_from_website(website_url):
     if not website_url or website_url == "No Website Available":
         return "N/A"
@@ -38,7 +64,7 @@ def extract_email_from_website(website_url):
     return "N/A"
 
 
-# 2. Multi-Page Google Maps Search (SerpAPI)
+# --- 3. MULTI-PAGE SERPAPI GOOGLE MAPS SEARCH ---
 def search_google_maps_multipage(category, location, api_key, max_pages=3):
     query = f"{category} in {location}"
     all_results = []
@@ -89,15 +115,15 @@ def search_google_maps_multipage(category, location, api_key, max_pages=3):
     return all_results
 
 
-# --- STREAMLIT DASHBOARD UI ---
+# --- 4. STREAMLIT DASHBOARD UI ---
 st.set_page_config(
     page_title="Ultimate Local Lead Extractor", layout="wide"
 )
 
-st.title("📍 Ultimate Business Lead Extractor (Multi-Page)")
+st.title("📍 GMB Profiles")
 st.write(
-    "Extract top ranked and extended multi-page listings with Email, Phone,"
-    " & Individual Copy Cards!"
+    "Extract multi-page business listings with Email, Phone, & Copy-Paste"
+    " Individual Cards!"
 )
 
 # SerpAPI Key Input
@@ -113,7 +139,12 @@ with col1:
 with col2:
     category = st.text_input("Category:", "hospital")
 with col3:
-    pages = st.selectbox("Pages to Scan:", [1, 2, 3], index=2)
+    pages = st.selectbox(
+        "Pages to Scan:",
+        [1, 2, 3, 5, 10],
+        index=2,
+        help="1 Page = ~20 results. 5 Pages = ~100 results.",
+    )
 
 if st.button("🔍 Search & Extract All Leads"):
     if not api_key:
